@@ -2,6 +2,8 @@
 
 use common::sense;
 
+# {{{ POD
+
 =head1 AUTHOR
 
 (c) 2010 Juan C. Muller E<lt>jcmuller@gmail.comE<gt>. All rights reserved.
@@ -46,7 +48,9 @@ mpd-notify [options]
                     retrieved from.
 
 =cut
+# }}}
 
+# {{{ Defaults Class
 package Defaults;
 
 sub base_path
@@ -54,10 +58,9 @@ sub base_path
 	my $base_path = "${ENV{HOME}}/.covers";
 	return $base_path;
 }
+# }}}
 
-# {{{
-# 
-# TODO
+# {{{ TODO
 #
 # - Check mp3 file for icon. 
 # 	- Not-> check cache directory for icon
@@ -69,12 +72,15 @@ sub base_path
 
 package MpdNotify;
 
+# {{{ Libraries
 use Audio::MPD;
 use Desktop::Notify;
 use Getopt::Long;
 use Pod::Usage;
 use Time::HiRes qw(usleep);
+# }}}
 
+# {{{ new
 sub new
 {
 	my ($proto, %args) = @_;
@@ -84,7 +90,9 @@ sub new
 	$self->_initialize(%args) if ($self->can('_initialize'));
 	return $self;
 }
+# }}}
 
+# {{{ _collect_arguments
 sub _collect_arguments
 {
 	my ($self) = @_;
@@ -111,7 +119,9 @@ sub _collect_arguments
 		pod2usage(-verbose => 2);
 	}
 }
+# }}}
 
+# {{{ _initialize
 sub _initialize
 {
 	my ($self, %args) = @_;
@@ -133,9 +143,9 @@ sub _initialize
 	$args{port} = $self->{arguments}{'mpd-port'} if ($self->{arguments}{'mpd-port'});
 	$self->{mpd}    = Audio::MPD->new(\%args);
 }
+# }}}
 
-# Get different things
-
+# {{{ _get_status
 sub _get_status
 {
 	my ($self) = @_;
@@ -155,7 +165,9 @@ sub _get_status
 		$status,
 		$volume;
 }
+# }}}
 
+# {{{ _get_album_cover
 sub _get_album_cover
 {
 	my ($self, $artist, $album) = @_;
@@ -175,7 +187,9 @@ sub _get_album_cover
 	my $icon = "$BASE_PATH/default.png";
 	return $icon;
 }
+# }}}
 
+# {{{ _display
 sub _display
 {
 	my ($self) = @_;
@@ -251,7 +265,9 @@ FINI
 	# Display the notification
 	$self->{notification}->show;
 }
+# }}}
 
+# {{{ notify
 sub notify
 {
 	my ($self) = @_;
@@ -297,7 +313,9 @@ sub notify
 	# This will probably *never* be reached, but we include for correctness.
 	$self->{notification}->close;
 }
+# }}}
 
+# {{{ main
 package Main;
 
 sub main
@@ -307,5 +325,6 @@ sub main
 }
 
 main();
+# }}}
 
-# vim:set foldmethod=marker:
+# vim:set foldmethod=marker expandtab sw=4 ts=4:
