@@ -15,10 +15,10 @@ directory in your path.
 
 Required modules:
 
-    * common::sense
-    * Audio::MPD
-    * Desktop::Notify
-    * Getopt::Long
+* common::sense
+* Audio::MPD
+* Desktop::Notify
+* Getopt::Long
     * Pod::Usage
     * Time::HiRes qw(usleep)
 
