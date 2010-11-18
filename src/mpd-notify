@@ -227,8 +227,8 @@ sub _display
 
 		my (undef, $total_seconds) = split /:/, $time->time;
 
-		$minutes    = sprintf('%02d', int ($total_seconds / 60));
-		$seconds    = sprintf('%02d', $total_seconds - $minutes * 60);
+		$minutes     = sprintf('%02d', int ($total_seconds / 60));
+		$seconds     = sprintf('%02d', $total_seconds - $minutes * 60);
 		$time_string = "${minutes}:${seconds}";
 
 		$status_string = $status->state eq 'play' ? 'playing' : 'paused';
@@ -250,8 +250,8 @@ sub _display
 	$self->{notification}->summary("Music Player Daemon - [$status_string]");
 
 	my $body = << "FINI";
-$artist - $title<br>
-$album<br>
+$artist - $title
+$album
 [$status_string] $time_string
 volume: ${volume}% repeat: $repeat_string random: $random_string
 FINI
