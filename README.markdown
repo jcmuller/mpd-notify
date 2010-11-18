@@ -19,8 +19,8 @@ Required modules:
 * Audio::MPD
 * Desktop::Notify
 * Getopt::Long
-    * Pod::Usage
-    * Time::HiRes qw(usleep)
+* Pod::Usage
+* Time::HiRes qw(usleep)
 
 Run the requirement check scipt (which requires Test::More) by running:
 
