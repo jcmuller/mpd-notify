@@ -2,9 +2,17 @@
 
 use common::sense;
 
+=head1 AUTHOR
+
+(c) 2010 Juan C. Muller E<lt>jcmuller@gmail.comE<gt>. All rights reserved.
+
 =head1 DESCRIPTION
 
 Get the data from MPD and display a notification window using Desktop::Notify.
+
+=head1 VERSION
+
+v0.1
 
 =head1 LICENSE
 
@@ -21,25 +29,21 @@ You should have received a copy of the GNU General Public License along with
 this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-=head1 AUTHOR
+=head1 USAGE
 
-Juan C. Muller &lt;jcmuller@gmail.com&gt;
+mpd-notify [options]
 
-=head1 SYNOPSIS
-
-mpd-notify.pl [options]
-
-	-o, --once		Run once
-	-c, --covers [args]
-					Directory(ies) where to look for covers. The first one will
-					be used to store new ones (currently not implemented).
-	-h, --mpd-host	Host name where MPD is running
-	-p, --mpd-port	Port number where MPD is running
-	-m, --man		Shoa man page
-	-h, --help		Show this text
-	-i, --images-from [args]
-					If arg='list' will show all the hosts where covers can be 
-					retrieved from.
+    -o, --once      Run once
+    -c, --cover [args] (may appear multiple times)
+                    Directory where to look for covers. The first one will
+                    be used to store new ones (currently not implemented).
+    -h, --mpd-host  Host name where MPD is running
+    -p, --mpd-port  Port number where MPD is running
+    -m, --man       Show man page
+    -h, --help      Show this text
+    -i, --images-from [args] (may appear multiple times)
+                    If arg='list' will show all the hosts where covers can be 
+                    retrieved from.
 
 =cut
 
@@ -51,7 +55,9 @@ sub base_path
 	return $base_path;
 }
 
-# {{{ TODO
+# {{{
+# 
+# TODO
 #
 # - Check mp3 file for icon. 
 # 	- Not-> check cache directory for icon
@@ -59,15 +65,6 @@ sub base_path
 # 		Present -> display
 # 	-> display
 #
-# - Add command line arguments
-# 	- Once
-# 		- Shows notification once. Otherwise, program runs forever.
-# 	- cover directory
-# 	- mpd host
-# 	- mpd port
-# 	- Choice of hosts to get covers from.
-# 		- Might need API keys.
-
 # }}}
 
 package MpdNotify;
@@ -75,16 +72,8 @@ package MpdNotify;
 use Audio::MPD;
 use Desktop::Notify;
 use Getopt::Long;
-use Time::HiRes qw(usleep);
 use Pod::Usage;
-
-=head1 CONSTRUCTOR
-
-=head2 SYNOPSIS
-
- my $mpdn = MpdNotify->new(%args);
-
-=cut
+use Time::HiRes qw(usleep);
 
 sub new
 {
@@ -187,7 +176,7 @@ sub _get_album_cover
 	return $icon;
 }
 
-sub display
+sub _display
 {
 	my ($self) = @_;
 
@@ -211,10 +200,10 @@ sub display
 	my $id       = '';
 	my $pos      = '';
 
-	my $statusString = 'stopped';
-	my $repeatString = '';
-	my $randomString = '';
-	my $timeString = '';
+	my $status_string = 'stopped';
+	my $repeat_string = '';
+	my $random_string = '';
+	my $time_string = '';
 
 	if ($status->state ne 'stop')
 	{
@@ -222,15 +211,15 @@ sub display
 		$time   = $status->time;
 		$volume = $status->volume;
 
-		my (undef, $totalTime) = split /:/, $time->time;
+		my (undef, $total_seconds) = split /:/, $time->time;
 
-		$minutes    = sprintf('%02d', int ($totalTime / 60));
-		$seconds    = sprintf('%02d', $totalTime - $minutes * 60);
-		$timeString = "${minutes}:${seconds}";
+		$minutes    = sprintf('%02d', int ($total_seconds / 60));
+		$seconds    = sprintf('%02d', $total_seconds - $minutes * 60);
+		$time_string = "${minutes}:${seconds}";
 
-		$statusString = $status->state eq 'play' ? 'playing' : 'paused';
-		$repeatString = $status->repeat ? 'on ' : 'off';
-		$randomString = $status->random ? 'on ' : 'off';
+		$status_string = $status->state eq 'play' ? 'playing' : 'paused';
+		$repeat_string = $status->repeat ? 'on ' : 'off';
+		$random_string = $status->random ? 'on ' : 'off';
 
 		$track    = $song->track  || '';
 		$songtime = $song->time   || '';
@@ -244,13 +233,13 @@ sub display
 		$pos      = $song->pos    || '';
 	}
 
-	$self->{notification}->summary("Music Player Daemon - [$statusString]");
+	$self->{notification}->summary("Music Player Daemon - [$status_string]");
 
 	my $body = << "FINI";
 $artist - $title<br>
 $album<br>
-[$statusString] $timeString
-volume: ${volume}% repeat: $repeatString random: $randomString
+[$status_string] $time_string
+volume: ${volume}% repeat: $repeat_string random: $random_string
 FINI
 
 	my $icon = $self->_get_album_cover($artist, $album);
@@ -262,12 +251,6 @@ FINI
 	# Display the notification
 	$self->{notification}->show;
 }
-
-=head1 notify
-
-=head2 SYNOPSIS
-
-=cut
 
 sub notify
 {
@@ -303,7 +286,7 @@ sub notify
 			$old_volume = $volume;
 			$old_random = $random;
 			$old_repeat = $repeat;
-			$self->display;
+			$self->_display;
 		}
 
 		last if ($self->{arguments}{once});
