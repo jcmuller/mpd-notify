@@ -14,14 +14,15 @@ To install, for the time being, copy or symlink src/mpd-notify to ~/bin or a
 directory in your path.
 
 Required modules:
-  - common::sense
-  - Audio::MPD
-  - Desktop::Notify
-  - Getopt::Long
-  - Pod::Usage
-  - Time::HiRes qw(usleep)
 
-Run the requirement check scipt (which requires Test::More) by running:
+* `Audio::MPD`
+* `Desktop::Notify`
+* `common::sense`
+* `Getopt::Long`
+* `Pod::Usage`
+* `Time::HiRes`
+
+Run the requirement check scipt (which requires `Test::More`) by running:
 
 	perl src/check-requirements.pl
 
