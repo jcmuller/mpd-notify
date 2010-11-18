@@ -15,14 +15,14 @@ directory in your path.
 
 Required modules:
 
-* common::sense
-* Audio::MPD
-* Desktop::Notify
-* Getopt::Long
-* Pod::Usage
-* Time::HiRes qw(usleep)
+* `Audio::MPD`
+* `Desktop::Notify`
+* `common::sense`
+* `Getopt::Long`
+* `Pod::Usage`
+* `Time::HiRes`
 
-Run the requirement check scipt (which requires Test::More) by running:
+Run the requirement check scipt (which requires `Test::More`) by running:
 
 	perl src/check-requirements.pl
 
