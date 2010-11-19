@@ -44,5 +44,5 @@ BEGIN { use_ok('Pod::Usage'); };
 BEGIN { use_ok('Time::HiRes'); };
 
 
-# vim:set foldmethod=marker expandtab sw=4 ts=4:
+# vim:set foldmethod=marker noexpandtab sw=4 ts=4:
 
