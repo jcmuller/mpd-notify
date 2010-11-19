@@ -81,13 +81,14 @@ use Time::HiRes qw(usleep);
 # }}}
 
 # {{{ new
+# Common constructor
 sub new
 {
 	my ($proto, %args) = @_;
 	my $class = ref $proto || $proto;
 	my $self = {};
 	bless $self, $class;
-	$self->_initialize(%args) if ($self->can('_initialize'));
+	$self->_initialize(%args);
 	return $self;
 }
 # }}}
@@ -98,6 +99,7 @@ sub _collect_arguments
 	my ($self) = @_;
 
 	my %arguments;
+
 	GetOptions(\%arguments,
 		'once',
 		'cover=s@',
@@ -129,19 +131,23 @@ sub _initialize
 	$self->_collect_arguments;
 
 	# Open a connection to the notification daemon
-	$self->{notify} = Desktop::Notify->new;
+	my $notify = Desktop::Notify->new;
 
-	# Create notification
-	$self->{notification} = $self->{notify}->create(timeout  => 5000);
+	# Create notification object
+	$self->{notification} = $notify->create(timeout  => 5000);
 
-	# Open a connection to MPD, and reuse it.
+	# Open a connection to MPD, and reuse it
 	my %args = (
 		conntype => 'reuse',
 	);
 
+	# If there are arguments passed in from the command line modifying the MPD
+	# connection, use them
 	$args{host} = $self->{arguments}{'mpd-host'} if ($self->{arguments}{'mpd-host'});
 	$args{port} = $self->{arguments}{'mpd-port'} if ($self->{arguments}{'mpd-port'});
-	$self->{mpd}    = Audio::MPD->new(\%args);
+
+	# Connect to MPD
+	$self->{mpd} = Audio::MPD->new(\%args);
 }
 # }}}
 
@@ -150,13 +156,15 @@ sub _get_status
 {
 	my ($self) = @_;
 
-	my $mpdstatus = $self->{mpd}->status;
+	# Cache the status object
+	my $_status = $self->{mpd}->status;
 
-	my $status = $mpdstatus->state  || 0;
-	my $song   = $mpdstatus->song   || 0;
-	my $random = $mpdstatus->random || 0;
-	my $repeat = $mpdstatus->repeat || 0;
-	my $volume = $mpdstatus->volume || 0;
+	# Query it
+	my $random = $_status->random || 0;
+	my $repeat = $_status->repeat || 0;
+	my $song   = $_status->song   || 0;
+	my $status = $_status->state  || 0;
+	my $volume = $_status->volume || 0;
 
 	return 
 		$random,
@@ -174,16 +182,19 @@ sub _get_album_cover
 
 	my $BASE_PATH = Defaults->base_path;
 
+	# Create convers directory if it doesn't exist.
 	mkdir $BASE_PATH if (! -d $BASE_PATH);
 
+	# Construct filename based on the current artist and album playing
 	my $filename = "$BASE_PATH/${artist}_${album}.png";
-	#print "$filename\n";
 
+	# Check for the existence of a file
 	if ( -e $filename and ! -z $filename)
 	{
 		return $filename;
 	}
 
+	# Otherwise, use a default image
 	my $icon = "$BASE_PATH/default.png";
 	return $icon;
 }
@@ -194,76 +205,122 @@ sub _display
 {
 	my ($self) = @_;
 
-	my $status = $self->{mpd}->status;
+	# Cache the status object
+	my $_status = $self->{mpd}->status;
 
-	my $song   = '';
-	my $time   = '';
-	my $volume = '';
+	# Declare variables used in notification
+	my $_minutes = 0;
+	my $_seconds = 0;
+	my $_song;
+	my $_time;
 
-	my $minutes = '';
-	my $seconds = '';
+	my %body_args;
 
-	my $track    = '';
-	my $songtime = '';
-	my $date     = '';
-	my $file     = '';
-	my $genre    = '';
-	my $artist   = '';
-	my $album    = '';
-	my $title    = '';
-	my $id       = '';
-	my $pos      = '';
-
-	my $status_string = 'stopped';
-	my $repeat_string = '';
-	my $random_string = '';
-	my $time_string = '';
-
-	if ($status->state ne 'stop')
+	for my $arg (qw/
+		album
+		artist
+		date
+		file
+		genre
+		id
+		pos
+		time
+		title
+		track
+		volume
+		random_string
+		repeat_string
+		status_string
+		time_string
+		/)
 	{
-		$song   = $self->{mpd}->song($status->{song});
-		$time   = $status->time;
-		$volume = $status->volume;
-
-		my (undef, $total_seconds) = split /:/, $time->time;
-
-		$minutes     = sprintf('%02d', int ($total_seconds / 60));
-		$seconds     = sprintf('%02d', $total_seconds - $minutes * 60);
-		$time_string = "${minutes}:${seconds}";
-
-		$status_string = $status->state eq 'play' ? 'playing' : 'paused';
-		$repeat_string = $status->repeat ? 'on ' : 'off';
-		$random_string = $status->random ? 'on ' : 'off';
-
-		$track    = $song->track  || '';
-		$songtime = $song->time   || '';
-		$date     = $song->date   || '';
-		$file     = $song->file   || '';
-		$genre    = $song->genre  || '';
-		$artist   = $song->artist || '';
-		$album    = $song->album  || '';
-		$title    = $song->title  || '';
-		$id       = $song->id     || '';
-		$pos      = $song->pos    || '';
+		$body_args{$arg} = '';
 	}
 
-	$self->{notification}->summary("Music Player Daemon - [$status_string]");
+	$body_args{status_string} = 'stopped';
 
-	my $body = << "FINI";
+	# Only attempt to get data out of the status object if MPD is not stopped
+	if ($_status->state ne 'stop')
+	{
+		# Get song object
+		$_song   = $self->{mpd}->song($_status->{song});
+		# Get time object
+		$_time   = $_status->time;
+
+		# Extract number of seconds that current song runs for
+		my (undef, $_t_seconds) = split /:/, $_time->time;
+
+		$_minutes = sprintf('%02d', int ($_t_seconds / 60));
+		$_seconds = sprintf('%02d', $_t_seconds - $_minutes * 60);
+
+		# Construct a nice time string
+		$body_args{time_string} = "${_minutes}:${_seconds}";
+
+		# Construct nice status strings
+		$body_args{status_string} = $_status->state eq 'play' ? 'playing' : 'paused';
+		$body_args{repeat_string} = $_status->repeat ? 'on ' : 'off';
+		$body_args{random_string} = $_status->random ? 'on ' : 'off';
+
+		$body_args{volume} = $_status->volume || 0;
+
+		# Not all of these are used currently, but they're available for
+		# modifications to the format of the notification string
+		for my $arg (qw/
+			album
+			artist
+			date
+			file
+			genre
+			id
+			pos
+			time
+			title
+			track
+			/)
+		{
+			$body_args{$arg} = $_song->{$arg} || '';
+		}
+	}
+
+	# Set notification summary line
+	$self->{notification}->summary("Music Player Daemon - [$body_args{status_string}]");
+
+	# Construct notification body text
+	my $body = $self->_get_body(%body_args);
+
+	my $icon = $self->_get_album_cover($body_args{artist}, $body_args{album});
+	$self->{notification}->app_icon($icon);
+	$self->{notification}->body($body);
+
+	# Display the notification
+	$self->{notification}->show;
+}
+# }}}
+
+# {{{ _get_body
+# Get the notification body contents. It is in its own method so that it can be
+# overridden. For that to happen, the architecture of this program would need
+# to change slightly. Not a lot.
+sub _get_body
+{
+	my ($this, %args) = @_;
+
+	my $artist      = $args{artist};
+	my $album       = $args{album};
+	my $time_string = $args{time_string};
+	my $title       = $args{title};
+	my $volume      = $args{volume};
+
+	my $random_string = $args{random_string};
+	my $repeat_string = $args{repeat_string};
+	my $status_string = $args{status_string};
+
+	return << "FINI";
 $artist - $title
 $album
 [$status_string] $time_string
 volume: ${volume}% repeat: $repeat_string random: $random_string
 FINI
-
-	my $icon = $self->_get_album_cover($artist, $album);
-	$self->{notification}->app_icon($icon);
-	$self->{notification}->body($body);
-
-	#print "$body\n";
-
-	# Display the notification
-	$self->{notification}->show;
 }
 # }}}
 
@@ -272,14 +329,18 @@ sub notify
 {
 	my ($self) = @_;
 
+	# Declare cache vars
+
+	my $old_random;
+	my $old_repeat;
 	my $old_song;
 	my $old_status;
 	my $old_volume;
-	my $old_repeat;
-	my $old_random;
 
+	# Loop forever
 	while (1)
 	{
+		# Get MPD's status
 		my (
 			$random,
 			$repeat,
@@ -288,20 +349,24 @@ sub notify
 			$volume
 		) = $self->_get_status;
 
+		# If there's been any changes...
 		if (
 			(!$old_song and !$old_status) or
-			($old_song   != $song)        or
-			($old_status ne $status)      or
 			($old_random ne $random)      or
 			($old_repeat ne $repeat)      or
+			($old_song   != $song)        or
+			($old_status ne $status)      or
 			($old_volume != $volume)
 		)
 		{
+			# Cache the changes and...
 			$old_song   = $song;
 			$old_status = $status;
 			$old_volume = $volume;
 			$old_random = $random;
 			$old_repeat = $repeat;
+
+			# Display a notification
 			$self->_display;
 		}
 
@@ -310,7 +375,9 @@ sub notify
 		usleep (500_000);
 	}
 
-	# This will probably *never* be reached, but we include for correctness.
+	# This will probably *never* be reached, but we include it for correctness.
+	# Actually, it will only be reached when the program is run with the --once
+	# option enabled.
 	$self->{notification}->close;
 }
 # }}}
@@ -327,4 +394,4 @@ sub main
 main();
 # }}}
 
-# vim:set foldmethod=marker expandtab sw=4 ts=4:
+# vim:set foldmethod=marker noexpandtab sw=4 ts=4:
