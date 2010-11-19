@@ -36,12 +36,14 @@ use strict;
 use warnings;
 use Test::More tests => 6;
 
-BEGIN { use_ok('common::sense'); };
-BEGIN { use_ok('Audio::MPD'); };
-BEGIN { use_ok('Desktop::Notify'); };
-BEGIN { use_ok('Getopt::Long'); };
-BEGIN { use_ok('Pod::Usage'); };
-BEGIN { use_ok('Time::HiRes'); };
+BEGIN {
+	use_ok('common::sense');
+	use_ok('Audio::MPD');
+	use_ok('Desktop::Notify');
+	use_ok('Getopt::Long');
+	use_ok('Pod::Usage');
+	use_ok('Time::HiRes');
+};
 
 
 # vim:set foldmethod=marker noexpandtab sw=4 ts=4:
