@@ -166,7 +166,7 @@ sub _get_status
 	my $status = $_status->state  || 0;
 	my $volume = $_status->volume || 0;
 
-	return 
+	return
 		$random,
 		$repeat,
 		$song,
