@@ -387,8 +387,7 @@ package Main;
 
 sub main
 {
-	my $mpdn = MpdNotify->new;
-	$mpdn->notify;
+	MpdNotify->new->notify;
 }
 
 main();
