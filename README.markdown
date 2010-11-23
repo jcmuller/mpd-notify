@@ -1,6 +1,6 @@
 # mpd-notify
 
-This utility connects to a MPD music server and monitors it for status changes.
+This utility connects to a [MPD](http://mpd.wikia.com/wiki/Music_Player_Daemon_Wiki) music server and monitors it for status changes.
 Once a song, the transport status (play, stop, pause), the volume, or the
 repeat status changes, a notification using the Desktop notification system is
 displayed. It has only been tested in Linux, using the Desktop notification
@@ -10,7 +10,7 @@ project](http://www.galago-project.org/specs/notification/).
 It will download cover images from an online source. This hasn't been
 implemented yet.
 
-To install, for the time being, copy or symlink `src/mpd-notify` to `~/bin` or a
+To install, for the time being, copy or soft-link `src/mpd-notify` to `~/bin` or a
 directory in your path.
 
 Required modules:
@@ -22,7 +22,7 @@ Required modules:
 * `Pod::Usage`
 * `Time::HiRes`
 
-Run the requirement check scipt (which requires `Test::More`) by running:
+Run the requirement check script (which requires `Test::More`) by running:
 
 	perl src/check-requirements.pl
 
