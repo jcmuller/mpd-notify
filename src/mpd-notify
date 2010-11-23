@@ -2,6 +2,16 @@
 
 use common::sense;
 
+# {{{ TODO
+#
+# - Check mp3 file for icon. 
+# 	- Not-> check cache directory for icon
+# 		Not present -> try to gather from amazon
+# 		Present -> display
+# 	-> display
+#
+# }}}
+
 # {{{ POD
 
 =head1 AUTHOR
@@ -60,16 +70,7 @@ sub base_path
 }
 # }}}
 
-# {{{ TODO
-#
-# - Check mp3 file for icon. 
-# 	- Not-> check cache directory for icon
-# 		Not present -> try to gather from amazon
-# 		Present -> display
-# 	-> display
-#
-# }}}
-
+# {{{ MpdNotify Class
 package MpdNotify;
 
 # {{{ Libraries
@@ -380,6 +381,7 @@ sub notify
 	# option enabled.
 	$self->{notification}->close;
 }
+# }}}
 # }}}
 
 # {{{ main
