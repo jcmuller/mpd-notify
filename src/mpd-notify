@@ -396,6 +396,7 @@ package Main;
 
 sub main
 {
+	$0 = 'mpd-notify';
 	MpdNotify->new->notify;
 }
 
