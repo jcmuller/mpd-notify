@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 
 use common::sense;
 
@@ -53,6 +53,7 @@ mpd-notify [options]
     -i, --images-from [args] (may appear multiple times)
                     If arg='list' will show all the hosts where covers can be 
                     retrieved from.
+    -d, --daemon    Fork to background
 
 =cut
 # }}}
@@ -75,6 +76,7 @@ use Audio::MPD;
 use Desktop::Notify;
 use Getopt::Long;
 use Pod::Usage;
+use POSIX 'setsid';
 use Time::HiRes qw(usleep);
 # }}}
 
@@ -99,13 +101,14 @@ sub _collect_arguments
 	my %arguments;
 
 	GetOptions(\%arguments,
-		'once',
 		'cover=s@',
+		'daemon',
+		'help',
+		'images-from=s@',
+		'man',
 		'mpd-host=s',
 		'mpd-port=i',
-		'man',
-		'help',
-		'images-from=s@'
+		'once',
 	);
 
 	$self->{arguments} = \%arguments;
@@ -118,6 +121,32 @@ sub _collect_arguments
 	{
 		pod2usage(-verbose => 2);
 	}
+	elsif ($self->{arguments}{daemon})
+	{
+		$self->_daemonize;
+	}
+}
+# }}}
+
+# {{{ _daemonize
+sub _daemonize
+{
+	my ($self) = @_;
+
+	# from perlipc
+	chdir '/' or die "Can't chdir to /: $!";
+	open STDIN, '/dev/null' or die "Can't read /dev/null: $!";
+	open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
+	defined(my $pid = fork) or die "Can't fork: $!";
+
+	if ($pid)
+	{
+		$SIG{CHLD} = "IGNORE";
+		exit
+	}
+
+	die "Can't start a new session: $!" if setsid == -1;
+	open STDERR, '>&STDOUT' or die "Can't dup stdout: $!";
 }
 # }}}
 
