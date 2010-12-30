@@ -133,6 +133,8 @@ sub _daemonize
 {
 	my ($self) = @_;
 
+	print "Forking to background...\n";
+
 	# from perlipc
 	chdir '/' or die "Can't chdir to /: $!";
 	open STDIN, '/dev/null' or die "Can't read /dev/null: $!";
