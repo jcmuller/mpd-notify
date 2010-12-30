@@ -398,7 +398,7 @@ sub notify
 			($old_repeat ne $repeat)      or
 			($old_song   != $song)        or
 			($old_status ne $status)      or
-			($old_volume != $volume)
+			($old_volume != $volume and $volume > -1)
 		)
 		{
 			# Cache the changes and...
